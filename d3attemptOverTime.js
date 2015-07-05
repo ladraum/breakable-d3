@@ -89,7 +89,7 @@
 
 		var context = svg.append("g")
 			.attr("class", "context")
-			.attr("transform", "translate(" + (margins.left + width * .25) + "," + (height + margins.top + chartHeight) + ")");
+			.attr("transform", "translate(" + (margins.left + (width * 0.25)) + "," + (height + margins.top + chartHeight) + ")");
 
 		context.append("g")
 			.attr("class", "x axis top")
