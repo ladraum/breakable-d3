@@ -2,15 +2,15 @@
 	var areaWidth = 940;
 	var areaHeight = 500;
 	var margins = {
-			top: 10,
-			right: 40,
-			bottom: 150,
-			left: 60
-		},
-		width = areaWidth - margins.left - margins.right,
-		height = areaHeight - margins.top - margins.bottom,
-		contextHeight = 50;
-	contextWidth = width * 0.5;
+		top: 30,
+		right: 40,
+		bottom: 150,
+		left: 60
+	};
+	var width = areaWidth - margins.left - margins.right;
+	var height = areaHeight - margins.top - margins.bottom;
+	var contextHeight = 50;
+	var contextWidth = width * 0.5;
 
 	var color = d3.scale.category10();
 	var usedColor = 0;
@@ -160,7 +160,7 @@
 			.attr('fill', function() {
 				return color(++usedColor);
 			})
-			.attr("transform", "translate(" + this.margins.left + "," + (this.margins.top + (this.height * this.id) + (10 * this.id)) + ")");
+			.attr("transform", this.buildChartContainerPosition());
 
 		this.chartContainer.append("path")
 			.data([this.chartData])
@@ -174,7 +174,7 @@
 		if (this.id == 0) {
 			this.chartContainer.append("g")
 				.attr("class", "x axis top")
-				.attr("transform", "translate(0,0)")
+				.attr("transform", "translate(0,-20)")
 				.call(this.xAxisTop);
 		}
 
@@ -205,4 +205,9 @@
 		this.chartContainer.select(".x.axis.top").call(this.xAxisTop);
 		this.chartContainer.select(".x.axis.bottom").call(this.xAxisBottom);
 	}
+
+	Chart.prototype.buildChartContainerPosition = function() {
+		return "translate(" + this.margins.left + "," + (this.margins.top + (this.height * this.id) + (10 * this.id)) + ")";
+	}
+
 }());

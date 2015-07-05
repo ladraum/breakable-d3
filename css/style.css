@@ -23,26 +23,6 @@ g.context g.axis line {
 	stroke-opacity: .1;
 }
 
-g.france path.chart {
-	fill: rgba(127,201,127,0.5);
-}
-
-g.germany path.chart {
-	fill: rgba(127,201,174,0.5);
-}
-
-g.japan path.chart {
-	fill: rgba(127,183,201,0.5);
-}
-
-g.uk path.chart {
-	fill: rgba(127,130,201,0.5);
-}
-
-g.usa path.chart {
-	fill: rgba(171,127,201,0.5);
-}
-
 .axis path, .axis line {
 	fill: none;
 	stroke: #aaa;
