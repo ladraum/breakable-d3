@@ -4,7 +4,7 @@ svg {
 
 text.category-title {
 	font-size: 20px;
-	color: black;
+	fill: black;
 }
 
 text.instructions {
