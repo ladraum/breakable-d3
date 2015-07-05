@@ -1,21 +1,23 @@
 (function() {
-	var margin = {
+	var areaWidth = 940;
+	var areaHeight = 500;
+	var margins = {
 			top: 10,
 			right: 40,
 			bottom: 150,
 			left: 60
 		},
-		width = 940 - margin.left - margin.right,
-		height = 500 - margin.top - margin.bottom,
+		width = areaWidth - margins.left - margins.right,
+		height = areaHeight - margins.top - margins.bottom,
 		contextHeight = 50;
-	contextWidth = width * .5;
+	contextWidth = width * 0.5;
 
 	var color = d3.scale.category10();
 	var usedColor = 0;
 
 	var svg = d3.select("#overtime-magic-here").append("svg")
-		.attr("width", width + margin.left + margin.right)
-		.attr("height", (height + margin.top + margin.bottom));
+		.attr("width", width + margins.left + margins.right)
+		.attr("height", (height + margins.top + margins.bottom));
 
 	d3.csv('categories.csv', createChart);
 
@@ -26,25 +28,14 @@
 
 		for (var prop in data[0]) {
 			if (data[0].hasOwnProperty(prop)) {
-				if (prop != 'Year' && prop != 'Month') {
+				if (prop != 'Year' && prop != 'Month')
 					categories.push(prop);
-				}
 			}
 		};
 
 		var categoriesCount = categories.length;
-		var startYear = data[0].Year;
-		var startMonth = data[0].Month;
-		var endYear = data[data.length - 1].Year;
-		var endMonth = data[data.length - 1].Month;
 		var chartHeight = height * (1 / categoriesCount);
 
-		/* Let's make sure these are all numbers, 
-		we don't want javaScript thinking it's text 
-							
-		Let's also figure out the maximum data point
-		We'll use this later to set the Y-Axis scale
-		*/
 		data.forEach(function(d) {
 			for (var prop in d) {
 				if (d.hasOwnProperty(prop)) {
@@ -56,8 +47,7 @@
 				}
 			}
 
-			// D3 needs a date object, let's convert it just one time
-			d.date = new Date(d.Year, d.Month - 1, 1);
+			d.date = new Date(d.Year, (d.Month - 1), 1);
 		});
 
 		for (var i = 0; i < categoriesCount; i++) {
@@ -69,14 +59,12 @@
 				height: height * (1 / categoriesCount),
 				maxDataPoint: maxDataPoint,
 				svg: svg,
-				margin: margin,
+				margins: margins,
 				showBottomAxis: (i == categories.length - 1)
 			}));
 
 		}
 
-		/* Let's create the context brush that will 
-				let us zoom and pan the chart */
 		var contextXScale = d3.time.scale()
 			.range([0, contextWidth])
 			.domain(charts[0].xScale.domain());
@@ -97,11 +85,11 @@
 
 		var brush = d3.svg.brush()
 			.x(contextXScale)
-			.on("brush", filterByDate);
+			.on("brush", filterBySelection);
 
 		var context = svg.append("g")
 			.attr("class", "context")
-			.attr("transform", "translate(" + (margin.left + width * .25) + "," + (height + margin.top + chartHeight) + ")");
+			.attr("transform", "translate(" + (margins.left + width * .25) + "," + (height + margins.top + chartHeight) + ")");
 
 		context.append("g")
 			.attr("class", "x axis top")
@@ -117,14 +105,13 @@
 
 		context.append("text")
 			.attr("class", "instructions")
-			.attr("transform", "translate(50," + (contextHeight + 20) + ")")
-			.text('Clique e arraste acima para mais informações');
+			.attr("transform", "translate(100," + (contextHeight + 20) + ")")
+			.text('Click and drag for zoom/pan');
 
-		function filterByDate() {
+		function filterBySelection() {
 			var b = brush.empty() ? contextXScale.domain() : brush.extent();
-			for (var i = 0; i < categoriesCount; i++) {
+			for (var i = 0; i < categoriesCount; i++)
 				charts[i].showOnly(b);
-			}
 		}
 	}
 
@@ -136,30 +123,23 @@
 		this.svg = options.svg;
 		this.id = options.id;
 		this.name = options.name;
-		this.margin = options.margin;
+		this.margins = options.margins;
 		this.showBottomAxis = options.showBottomAxis;
 
 		var localName = this.name;
 
-		/* XScale is time based */
 		this.xScale = d3.time.scale()
 			.range([0, this.width])
 			.domain(d3.extent(this.chartData.map(function(d) {
 				return d.date;
 			})));
 
-		/* YScale is linear based on the maxData Point we found earlier */
 		this.yScale = d3.scale.linear()
 			.range([this.height, 0])
 			.domain([0, this.maxDataPoint]);
 		var xS = this.xScale;
 		var yS = this.yScale;
 
-		/* 
-			This is what creates the chart.
-			There are a number of interpolation options. 
-			'basis' smooths it the most, however, when working with a lot of data, this will slow it down 
-		*/
 		this.area = d3.svg.area()
 			.interpolate("basis")
 			.x(function(d) {
@@ -169,10 +149,7 @@
 			.y1(function(d) {
 				return yS(d[localName]);
 			});
-		/*
-			This isn't required - it simply creates a mask. If this wasn't here,
-			when we zoom/panned, we'd see the chart go off to the left under the y-axis 
-		*/
+
 		this.svg.append("defs").append("clipPath")
 			.attr("id", "clip-" + this.id)
 			.append("rect")
@@ -183,9 +160,8 @@
 			.attr('fill', function() {
 				return color(++usedColor);
 			})
-			.attr("transform", "translate(" + this.margin.left + "," + (this.margin.top + (this.height * this.id) + (10 * this.id)) + ")");
+			.attr("transform", "translate(" + this.margins.left + "," + (this.margins.top + (this.height * this.id) + (10 * this.id)) + ")");
 
-		/* We've created everything, let's actually add it to the page */
 		this.chartContainer.append("path")
 			.data([this.chartData])
 			.attr("class", "chart")
@@ -194,7 +170,7 @@
 
 		this.xAxisTop = d3.svg.axis().scale(this.xScale).orient("bottom");
 		this.xAxisBottom = d3.svg.axis().scale(this.xScale).orient("top");
-		/* We only want a top axis if it's the first country */
+
 		if (this.id == 0) {
 			this.chartContainer.append("g")
 				.attr("class", "x axis top")
@@ -202,11 +178,10 @@
 				.call(this.xAxisTop);
 		}
 
-		/* Only want a bottom axis on the last country */
 		if (this.showBottomAxis) {
 			this.chartContainer.append("g")
 				.attr("class", "x axis bottom")
-				.attr("transform", "translate(0," + this.height + ")")
+				.attr("transform", "translate(0," + (this.height + 20) + ")")
 				.call(this.xAxisBottom);
 		}
 
@@ -218,7 +193,7 @@
 			.call(this.yAxis);
 
 		this.chartContainer.append("text")
-			.attr("class", "country-title")
+			.attr("class", "category-title")
 			.attr("transform", "translate(15,40)")
 			.text(this.name);
 
