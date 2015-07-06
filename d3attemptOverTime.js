@@ -124,9 +124,9 @@
 		}
 
 		function filterBySelection() {
-			var b = brush.empty() ? contextXScale.domain() : brush.extent();
+			var currentSelection = brush.empty() ? contextXScale.domain() : brush.extent();
 			for (var i = 0; i < categoriesCount; i++)
-				charts[i].showOnly(b);
+				charts[i].showOnly(currentSelection);
 		}
 
 		function setupContext() {
