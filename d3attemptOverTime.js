@@ -25,94 +25,144 @@
 		var categories = [];
 		var charts = [];
 		var maxDataPoint = 0;
+		var categoriesCount;
+		var chartHeight;
+		var contextXScale;
+		var contextAxis;
+		var contextArea;
+		var brush;
+		var context;
 
-		for (var prop in data[0]) {
-			if (data[0].hasOwnProperty(prop)) {
-				if (prop != 'Year' && prop != 'Month')
-					categories.push(prop);
-			}
-		};
+		function initialize() {
+			extractCategoriesDataFromCSV();
 
-		var categoriesCount = categories.length;
-		var chartHeight = height * (1 / categoriesCount);
+			categoriesCount = categories.length;
+			chartHeight = height * (1 / categoriesCount);
 
-		data.forEach(function(d) {
-			for (var prop in d) {
-				if (d.hasOwnProperty(prop)) {
-					d[prop] = parseFloat(d[prop]);
+			fixCSVData();
+			createIndividualChats();
+			setupContextXScale();
+			setupContextAxis();
+			setupContextArea();
+			setupBrush();
+			setupContext();
+			setupTopAxis();
+			setupContextBrush();
+			buildCaptionLabel();
+		}
 
-					if (d[prop] > maxDataPoint) {
-						maxDataPoint = d[prop];
+		function extractCategoriesDataFromCSV() {
+			for (var prop in data[0]) {
+				if (data[0].hasOwnProperty(prop)) {
+					if (prop != 'Year' && prop != 'Month')
+						categories.push(prop);
+				}
+			};
+		}
+
+		function fixCSVData() {
+			data.forEach(function(d) {
+				for (var prop in d) {
+					if (d.hasOwnProperty(prop)) {
+						d[prop] = parseFloat(d[prop]);
+
+						if (d[prop] > maxDataPoint)
+							maxDataPoint = d[prop];
 					}
 				}
-			}
 
-			d.date = new Date(d.Year, (d.Month - 1), 1);
-		});
+				d.date = new Date(d.Year, (d.Month - 1), 1);
+			});
+		}
 
-		for (var i = 0; i < categoriesCount; i++) {
-			charts.push(new Chart({
+		function createIndividualChats() {
+			for (var i = 0; i < categoriesCount; i++)
+				charts.push(createIndividualChat(i));
+		}
+
+		function createIndividualChat(index) {
+			return new Chart({
 				data: data.slice(),
-				id: i,
-				name: categories[i],
+				id: index,
+				name: categories[index],
 				width: width,
 				height: height * (1 / categoriesCount),
 				maxDataPoint: maxDataPoint,
 				svg: svg,
 				margins: margins,
-				showBottomAxis: (i == categories.length - 1)
-			}));
-
+				showBottomAxis: (index == categories.length - 1)
+			});
 		}
 
-		var contextXScale = d3.time.scale()
-			.range([0, contextWidth])
-			.domain(charts[0].xScale.domain());
+		function setupContextXScale() {
+			contextXScale = d3.time.scale().range([0, contextWidth])
+				.domain(charts[0].xScale.domain());
+		}
 
-		var contextAxis = d3.svg.axis()
-			.scale(contextXScale)
-			.tickSize(contextHeight)
-			.tickPadding(-10)
-			.orient("bottom");
+		function setupContextAxis() {
+			contextAxis = d3.svg.axis()
+				.scale(contextXScale)
+				.tickSize(contextHeight)
+				.tickPadding(-10)
+				.orient("bottom");
+		}
 
-		var contextArea = d3.svg.area()
-			.interpolate("monotone")
-			.x(function(d) {
-				return contextXScale(d.date);
-			})
-			.y0(contextHeight)
-			.y1(0);
+		function setupContextArea() {
+			contextArea = d3.svg.area()
+				.interpolate("monotone")
+				.x(function(d) {
+					return contextXScale(d.date);
+				})
+				.y0(contextHeight)
+				.y1(0);
+		}
 
-		var brush = d3.svg.brush()
-			.x(contextXScale)
-			.on("brush", filterBySelection);
-
-		var context = svg.append("g")
-			.attr("class", "context")
-			.attr("transform", "translate(" + (margins.left + (width * 0.25)) + "," + (height + margins.top + chartHeight) + ")");
-
-		context.append("g")
-			.attr("class", "x axis top")
-			.attr("transform", "translate(0,0)")
-			.call(contextAxis)
-
-		context.append("g")
-			.attr("class", "x brush")
-			.call(brush)
-			.selectAll("rect")
-			.attr("y", 0)
-			.attr("height", contextHeight);
-
-		context.append("text")
-			.attr("class", "instructions")
-			.attr("transform", "translate(100," + (contextHeight + 20) + ")")
-			.text('Click and drag for zoom/pan');
+		function setupBrush() {
+			brush = d3.svg.brush()
+				.x(contextXScale)
+				.on("brush", filterBySelection);
+		}
 
 		function filterBySelection() {
 			var b = brush.empty() ? contextXScale.domain() : brush.extent();
 			for (var i = 0; i < categoriesCount; i++)
 				charts[i].showOnly(b);
 		}
+
+		function setupContext() {
+			context = svg.append("g")
+				.attr("class", "context")
+				.attr("transform", buildContextPosition());
+		}
+
+		function buildContextPosition() {
+			return "translate(" + (margins.left + (width * 0.25)) + "," + (height + margins.top + chartHeight) + ")";
+		}
+
+		function setupTopAxis() {
+			context.append("g")
+				.attr("class", "x axis top")
+				.attr("transform", "translate(0,0)")
+				.call(contextAxis)
+		}
+
+		function setupContextBrush() {
+			context.append("g")
+				.attr("class", "x brush")
+				.call(brush)
+				.selectAll("rect")
+				.attr("y", 0)
+				.attr("height", contextHeight);
+		}
+
+		function buildCaptionLabel() {
+			context.append("text")
+				.attr("class", "instructions")
+				.attr("transform", "translate(100," + (contextHeight + 20) + ")")
+				.text('Click and drag for zoom/pan');
+		}
+
+		initialize();
 	}
 
 	function Chart(options) {
@@ -152,9 +202,7 @@
 
 		this.svg.append("defs").append("clipPath")
 			.attr("id", "clip-" + this.id)
-			.append("rect")
-			.attr("width", this.width)
-			.attr("height", this.height);
+			.append("rect").attr("width", this.width).attr("height", this.height);
 
 		this.chartContainer = svg.append("g")
 			.attr('fill', function() {
@@ -171,19 +219,17 @@
 		this.xAxisTop = d3.svg.axis().scale(this.xScale).orient("bottom");
 		this.xAxisBottom = d3.svg.axis().scale(this.xScale).orient("top");
 
-		if (this.id == 0) {
+		if (this.id == 0)
 			this.chartContainer.append("g")
-				.attr("class", "x axis top")
-				.attr("transform", "translate(0,-20)")
-				.call(this.xAxisTop);
-		}
+			.attr("class", "x axis top")
+			.attr("transform", "translate(0,-20)")
+			.call(this.xAxisTop);
 
-		if (this.showBottomAxis) {
+		if (this.showBottomAxis)
 			this.chartContainer.append("g")
-				.attr("class", "x axis bottom")
-				.attr("transform", "translate(0," + (this.height + 20) + ")")
-				.call(this.xAxisBottom);
-		}
+			.attr("class", "x axis bottom")
+			.attr("transform", "translate(0," + (this.height + 20) + ")")
+			.call(this.xAxisBottom);
 
 		this.yAxis = d3.svg.axis().scale(this.yScale).orient("left").ticks(5);
 

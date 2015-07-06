@@ -11,18 +11,6 @@ text.instructions {
 	font-size: 16px;
 }
 
-g.context g.brush rect.background {
-	fill: rgba(0,0,0,.1);
-}
-
-g.context g.axis path {
-	stroke-opacity: 0;
-}
-
-g.context g.axis line {
-	stroke-opacity: .1;
-}
-
 .axis path, .axis line {
 	fill: none;
 	stroke: #aaa;
@@ -36,6 +24,19 @@ g.context g.axis line {
 }
 
 g.context rect.background{
-	fill: rgb(200,200,255);
+	fill: rgba(200,200,255,0.5);
 	visibility: visible !important;
 }​
+
+g.context g.brush rect.background {
+	fill: rgba(0,0,0,.1);
+}
+
+g.context g.axis path {
+	stroke-opacity: 0;
+}
+
+g.context g.axis line {
+	stroke-opacity: .1;
+}
+
